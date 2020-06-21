@@ -1,0 +1,14 @@
+Started log: 21 June
+    21 June
+        - storing connectedUsersAndSession data to the redis server
+        - have plans on using redis for nextNumber and getWinner routes
+
+ TODO:
+    - Dockerize server
+    - Run a Kubernetes swarm
+    - Try caching where ever possible (
+        For now:
+            1. nextNumber
+            2. getWinner
+            3. 
+    )
