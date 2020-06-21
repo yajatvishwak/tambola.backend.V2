@@ -2,9 +2,11 @@ var express = require("express");
 var mongoose = require("mongoose");
 var logger = require("morgan");
 var socketio = require("socket.io");
-var redis = require("redis");
+const Redis = require("ioredis");
+const redis = new Redis();
 var http = require("http");
 var cors = require("cors");
+const { parse, stringify } = require("flatted");
 var port = 3000;
 
 var gameRouter = require("./routes/gameRouter");
@@ -16,7 +18,6 @@ app.use(cors());
 
 var server = http.createServer(app);
 var io = socketio(server);
-var client = redis.createClient();
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -35,32 +36,37 @@ app.get("*", function (req, res) {
 
 //Websockets -- need to find a better way to split this up -- Found it, its called Redis :)
 //Session Variable -- will now be stored in a redis server
-var userAndSession = [];
-
-// Setting up redis server for handling session
-client.on("connect", function () {
-  console.log("Redis client connected");
-});
-client.on("error", function (err) {
-  console.log("Something went wrong " + err);
-});
 
 io.on("connection", (socket) => {
   console.log("[WS] A User Connected");
 
   socket.on("room", (parameters) => {
     socket.join(parameters.room);
-    userAndSession.push({
+    console.log(socket.id);
+    var sesh = JSON.stringify({
       username: parameters.username,
       room: parameters.room,
-      socket: socket,
+      socket: socket.id,
     });
+    try {
+      redis.rpush("UAS", sesh).then((result) => {
+        console.log("Added to redis list: " + result);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+
+    // userAndSession.push({
+    //   username: parameters.username,
+    //   room: parameters.room,
+    //   socket: socket,
+    // });
     console.log("User Joined a Room");
     var room = io.sockets.adapter.rooms["Room1"];
     //console.log(room);
     // /broadcast("Room1", "winner", "winner!!!");
 
-    console.log(userAndSession);
+    //console.log(userAndSession);
   });
 
   socket.on("disconnect", () => {
@@ -86,26 +92,49 @@ var broadcast = (room, channel, message) => {
 // setInterval(() => broadcast("room2", "broadcast", "Hey Room2"), 1000);
 
 var removeFromRoom = (roomID, user) => {
-  var socketobj = userAndSession.filter((item) => {
-    if (item.username === user) {
-      return item;
-    }
-  });
-  //console.log(socketobj);
+  redis
+    .lrange("UAS", 0, -1)
+    .then((userAndSessionredis) => {
+      var userAndSessions = userAndSessionredis.map((element) => {
+        return JSON.parse(element);
+        //console.log(parse(element));
+      });
+      //console.log(userAndSessionredis);
+      var userAndSession = userAndSessions.filter((ele) => {
+        if (ele.username === user) return ele;
+      });
+      //console.log(userAndSession);
+      userAndSession.map((element) => {
+        try {
+          let socket = io.sockets.connected[element.socket];
+          socket.emit("kickUser", { disconnect: true });
+          socket.leave(roomID);
+        } catch (err) {
+          console.log("Redundant data");
+        }
+      });
+      var updatedObj = userAndSessions.filter((ele) => {
+        return ele.username !== user;
+      });
+      console.log(userAndSession);
+      console.log(updatedObj);
 
-  var sockets = socketobj.map((item) => {
-    return item.socket;
-  });
-  sockets.map((soc) => {
-    soc.emit("kickUser", { disconnect: true });
-    soc.leave(roomID);
-  });
-
-  // var socket = socketobj[socketobj.length - 1].socket;
-  // socket.emit("kickUser", { disconnect: true });
-  // socket.leave(roomID);
-  var room = io.sockets.adapter.rooms[roomID];
-  console.log(room);
+      try {
+        redis.del("UAS").then((ritem) => {
+          console.log("Item removed: " + ritem);
+        });
+        updatedObj.map((item) => {
+          redis.rpush("UAS", JSON.stringify(item)).then((result) => {
+            console.log("Updated redis list: " + result);
+          });
+        });
+      } catch (error) {
+        console.log("Error in Removing");
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 mongoose
@@ -122,5 +151,4 @@ mongoose
   .catch(() => console.log("Gameserver Offline. Check Connections"));
 
 exports.broadcast = broadcast;
-exports.userAndSession = userAndSession;
 exports.removeFromRoom = removeFromRoom;

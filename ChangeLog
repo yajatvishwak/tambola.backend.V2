@@ -1,7 +1,9 @@
 Started log: 21 June
     21 June
-        - storing connectedUsersAndSession data to the redis server
-        - have plans on using redis for nextNumber and getWinner routes
+        - storing connectedUsersAndSession data to the redis server 
+            -- test successful (June 22 2:20 am)
+            -- integration to main app pending   
+        
 
  TODO:
     - Dockerize server
