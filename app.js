@@ -6,12 +6,12 @@ const Redis = require("ioredis");
 const redis = new Redis();
 var http = require("http");
 var cors = require("cors");
-const { parse, stringify } = require("flatted");
 var port = 3000;
 
 var gameRouter = require("./routes/gameRouter");
 var userRouter = require("./routes/userRouter");
 var adminRouter = require("./routes/adminRouter");
+const Session = require("./models/Session");
 
 var app = express();
 app.use(cors());
@@ -91,7 +91,7 @@ var broadcast = (room, channel, message) => {
 // setInterval(() => broadcast("room1", "broadcast", "Hey Room1"), 1000);
 // setInterval(() => broadcast("room2", "broadcast", "Hey Room2"), 1000);
 
-var removeFromRoom = (roomID, user) => {
+var removeFromRoom = async (roomID, user) => {
   redis
     .lrange("UAS", 0, -1)
     .then((userAndSessionredis) => {
@@ -116,8 +116,8 @@ var removeFromRoom = (roomID, user) => {
       var updatedObj = userAndSessions.filter((ele) => {
         return ele.username !== user;
       });
-      console.log(userAndSession);
-      console.log(updatedObj);
+      //console.log(userAndSession);
+      //console.log(updatedObj);
 
       try {
         redis.del("UAS").then((ritem) => {
@@ -135,6 +135,12 @@ var removeFromRoom = (roomID, user) => {
     .catch((err) => {
       console.log(err);
     });
+  var session = await Session.findOne({ roomID });
+  var index = session.signedUpUsers.indexOf(user);
+  if (index > -1) {
+    var signedUpUsersNew = session.signedUpUsers;
+    signedUpUsersNew.splice(index, 1);
+  }
 };
 
 mongoose

@@ -12,5 +12,6 @@ router.post("/login", userController.login);
 router.post("/signUpRoom", userController.signUpRoom);
 router.post("/joinRoom", userController.joinRoom);
 router.get("/getSessions", userController.getSessions);
+router.post("/isAdmin", userController.isAdmin);
 
 module.exports = router;

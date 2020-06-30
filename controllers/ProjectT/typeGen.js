@@ -6,7 +6,6 @@ const table = {
 };
 const typeGen = (type) => {
   var name = table[type] || "Mystery Category";
-
   return name;
 };
 exports.typeGen = typeGen;

@@ -118,6 +118,7 @@ var nextNumber = (roomID) => {
       done.push(randomNumber);
       Broacast.broadcast(roomID, "broadcast", {
         number: randomNumber,
+        connected: session.signedUpUsers.length,
         done: done,
         gameOver: false,
       });
@@ -167,8 +168,16 @@ var getCategoryandTicket = (req, res) => {
             res.send(false);
           } else {
             var tickets = user.tickets;
-            console.log(tickets);
-            if (tickets.length === 0) {
+            //console.log(tickets);
+            var isPresent = false;
+            tickets.map((item) => {
+              if (item.roomID === roomID) {
+                isPresent = true;
+              }
+            });
+            console.log(isPresent);
+
+            if (isPresent === false || tickets.length == 0) {
               console.log("in if");
               var ticket = ticketGenerator.getTickets(1);
               tickets.push({ ticket: ticket[0], roomID: roomID });
@@ -181,7 +190,7 @@ var getCategoryandTicket = (req, res) => {
               });
             } else {
               var tickets = user.tickets;
-              console.log(tickets);
+              //console.log(tickets);
               var obj = tickets.filter((item) => {
                 return item.roomID === roomID;
               });
@@ -243,6 +252,11 @@ var checkWinner = (req, res) => {
                   console.log(tempGO);
                 }
               );
+              //Untested
+              var Useradmin = await User.findOne({ username: user });
+              console.log(Useradmin);
+              Useradmin.admin = "disabled";
+              Useradmin.save();
             } else {
               winnerObj = winnerObj.map((item) => {
                 if (item.type == type) {

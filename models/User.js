@@ -10,7 +10,7 @@ var UserSchema = new Schema(
     phone: String,
     username: { type: String, required: true, index: { unique: true } },
     password: { type: String, required: true },
-    coupons: Number,
+    admin: { type: String, default: "disabled" },
     tickets: [
       {
         roomID: String,

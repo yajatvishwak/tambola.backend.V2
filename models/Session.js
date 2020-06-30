@@ -14,6 +14,7 @@ var SessionSchema = new Schema(
     pause: { type: Boolean, default: false },
     gameOver: Boolean,
     winnerobj: { type: Array, default: [] },
+    ownedBy: String,
     deets: {
       Roomname: String,
       description: String,

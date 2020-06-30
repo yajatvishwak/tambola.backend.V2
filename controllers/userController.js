@@ -56,47 +56,57 @@ const signUpRoom = async (req, res) => {
       res.send(false);
     } else {
       console.log(session.type);
-      switch (session.type) {
-        case "Open":
-          var allsignedupusers = session.signedUpUsers;
-          var newarr = [...new Set(allsignedupusers)];
-          var maxUsers = session.settings.maxUsers;
-          if (newarr.indexOf(user) !== -1) {
-            res.send("DUS"); // duplicate user signup
-          } else {
-            if (allsignedupusers.length + 1 <= maxUsers) {
-              newarr.push(user);
-              console.log(newarr);
-              session.updateOne({ signedUpUsers: newarr }, (err) => {
-                if (err) res.send(false);
-                else res.send(true);
-              });
-            } else {
-              res.send("MLR");
-            }
-          }
-          break;
-        case "Private":
-          session.compareSecretKey(secretKey, (err, isMatch) => {
-            if (err || isMatch === false) {
-              res.send(false);
-            } else {
+
+      if (session.ownedBy === user) {
+        res.send("AC"); //Admin call
+      } else {
+        if (session.active === false) {
+          switch (session.type) {
+            case "Open":
               var allsignedupusers = session.signedUpUsers;
+              var newarr = [...new Set(allsignedupusers)];
               var maxUsers = session.settings.maxUsers;
-              if (allsignedupusers.length + 1 <= maxUsers) {
-                allsignedupusers.push(user);
-                session.updateOne(
-                  { signedUpUsers: allsignedupusers },
-                  (err) => {
+              if (newarr.indexOf(user) !== -1) {
+                res.send("DUS"); // duplicate user signup
+              } else {
+                if (allsignedupusers.length + 1 <= maxUsers) {
+                  newarr.push(user);
+                  console.log(newarr);
+                  session.updateOne({ signedUpUsers: newarr }, (err) => {
                     if (err) res.send(false);
                     else res.send(true);
-                  }
-                );
+                  });
+                } else {
+                  res.send("MLR");
+                }
               }
-            }
-          });
-          break;
-        default:
+              break;
+            case "Private":
+              session.compareSecretKey(secretKey, (err, isMatch) => {
+                if (err || isMatch === false) {
+                  res.send(false);
+                } else {
+                  var allsignedupusers = session.signedUpUsers;
+                  var maxUsers = session.settings.maxUsers;
+                  if (allsignedupusers.length + 1 <= maxUsers) {
+                    allsignedupusers.push(user);
+                    session.updateOne(
+                      { signedUpUsers: allsignedupusers },
+                      (err) => {
+                        if (err) res.send(false);
+                        else res.send(true);
+                      }
+                    );
+                  }
+                }
+              });
+              break;
+            default:
+          }
+        } else {
+          console.log("Relogin attempt");
+          res.send("RLA"); //Relogin attempt
+        }
       }
     }
   });
@@ -123,7 +133,7 @@ var joinRoom = async (req, res) => {
       }
     }
   });
-  console.log("[EXP] User ");
+
   res.send(present);
 };
 
@@ -140,8 +150,29 @@ const getSessions = async (req, res) => {
   res.send(fall);
 };
 
+const isAdmin = async (req, res) => {
+  var username = req.body.username;
+  const user = await User.findOne({ username: username });
+  if (user.admin !== "disabled" && user.admin !== "") {
+    Session.findOne({ roomID: user.admin }).then((doc) => {
+      if (doc) {
+        var output = {
+          admin: { isAdmin: true, roomID: user.admin },
+          adminPresent: true,
+        };
+        res.send(output);
+      } else {
+        res.send("DNE"); //Does not exist
+      }
+    });
+  } else {
+    res.send(false);
+  }
+};
+
 exports.signup = signup;
 exports.login = login;
 exports.signUpRoom = signUpRoom;
 exports.joinRoom = joinRoom;
 exports.getSessions = getSessions;
+exports.isAdmin = isAdmin;

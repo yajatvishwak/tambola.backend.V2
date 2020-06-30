@@ -1,6 +1,9 @@
 const Session = require("../models/Session");
+const User = require("../models/User");
 var shuffle = require("lodash.shuffle");
 var Broadcast = require("../app");
+const Redis = require("ioredis");
+const redis = new Redis();
 var createSession = async (req, res) => {
   var calling = [];
   var settings = req.body.settings;
@@ -13,9 +16,6 @@ var createSession = async (req, res) => {
   for (var i = 1; i <= 90; i++) {
     calling.push(i);
   }
-  calling = shuffle(calling);
-  calling = shuffle(calling);
-  calling = shuffle(calling);
   calling = shuffle(calling);
 
   try {
@@ -31,9 +31,15 @@ var createSession = async (req, res) => {
       gameOver: false,
       pause: false,
       active: false,
+      signedUpUsers: ["admin"],
+      ownedBy: req.body.user,
     });
     // /console.log("before save");
     var sessionStatus = await session.save();
+    var Useradmin = await User.findOne({ username: req.body.user });
+    //console.log(Useradmin);
+    Useradmin.admin = req.body.roomID;
+    Useradmin.save();
 
     // /console.log(sessionStatus);
     //console.log("after save");
@@ -91,6 +97,30 @@ var disconnectUser = (req, res) => {
   }
 };
 
+var getParticipantsInRoom = (req, res) => {
+  var roomID = req.body.roomID;
+  try {
+    redis.lrange("UAS", 0, -1).then((userAndSessionredis) => {
+      var userandSessions = userAndSessionredis.map((ele) => {
+        return JSON.parse(ele);
+      });
+      var userAndSession = userandSessions.filter((ele) => {
+        if (ele.room === roomID) return ele;
+      });
+      var justName = userAndSession.map((ele) => {
+        return ele.username;
+      });
+      justName = Object.keys(justName.reduce((p, c) => ((p[c] = true), p), {}));
+      console.log(justName);
+      res.send(justName);
+    });
+  } catch (err) {
+    console.log(err);
+    res.send(false);
+  }
+};
+
 exports.createSession = createSession;
 exports.disconnectUser = disconnectUser;
 exports.resetGame = resetGame;
+exports.getParticipantsInRoom = getParticipantsInRoom;

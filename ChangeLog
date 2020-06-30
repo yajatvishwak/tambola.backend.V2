@@ -2,8 +2,15 @@ Started log: 21 June
     21 June
         - storing connectedUsersAndSession data to the redis server 
             -- test successful (June 22 2:20 am)
-            -- integration to main app pending   
-        
+            -- integration to main app pending(Done June 22 3:10 am)
+    26 June 
+        - Modified /admin/createSession to support admin
+        - added /user/isAdmin to handle admin
+        - added /admin/getParticipants to display all the users in a room
+
+    30 June
+        -corrected the getCategoryandTicket route - wasnt generating new routes for new room - now fixed
+        -planning to add crash protection to server
 
  TODO:
     - Dockerize server
