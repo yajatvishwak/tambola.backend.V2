@@ -6,7 +6,9 @@ const Redis = require("ioredis");
 const redis = new Redis();
 var http = require("http");
 var cors = require("cors");
-var port = 3000;
+
+const args = parseArgs(process.argv.slice(2));
+const { name = "default", port = "3000" } = args;
 
 var gameRouter = require("./routes/gameRouter");
 var userRouter = require("./routes/userRouter");
@@ -154,8 +156,8 @@ mongoose
     useFindAndModify: false,
   })
   .then(() => {
-    server.listen(port, () => {
-      console.log("Gameserver Online on port %d", port);
+    server.listen(port, "localhost", () => {
+      console.log(`Gameserver- ${name} Online on port ${port}`);
     });
   })
   .catch(() => console.log("Gameserver Offline. Check Connections"));

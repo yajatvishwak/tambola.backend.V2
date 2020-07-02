@@ -16,6 +16,7 @@
     "ioredis": "^4.17.3",
     "jade": "~1.11.0",
     "lodash.shuffle": "^4.2.0",
+    "minimist": "^1.2.5",
     "mongoose": "^5.9.15",
     "morgan": "^1.9.1",
     "redis": "^3.0.2",
