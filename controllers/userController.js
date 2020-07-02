@@ -25,17 +25,28 @@ const login = (req, res) => {
     username: req.body.username,
     password: req.body.password,
   };
-  User.findOne({ username: loginUser.username }, (err, user) => {
-    if (err) {
+  console.log(loginUser);
+  try {
+    if (loginUser.password !== null && loginUser.username !== null) {
+      User.findOne({ username: loginUser.username }, (err, user) => {
+        console.log(user);
+        if (err || user === null) {
+          res.send(false);
+        } else {
+          user.comparePassword(loginUser.password, function (err, isMatch) {
+            if (err) throw err;
+            if (isMatch)
+              console.log("[EXP] %s has logged in", loginUser.username);
+            res.send(isMatch);
+          });
+        }
+      });
+    } else {
       res.send(false);
-      throw err;
     }
-    user.comparePassword(loginUser.password, function (err, isMatch) {
-      if (err) throw err;
-      if (isMatch) console.log("[EXP] %s has logged in", loginUser.username);
-      res.send(isMatch);
-    });
-  });
+  } catch (err) {
+    res.send(false);
+  }
 };
 
 // TODO:

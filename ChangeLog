@@ -11,10 +11,14 @@ Started log: 21 June
     30 June
         -corrected the getCategoryandTicket route - wasnt generating new routes for new room - now fixed
         -planning to add crash protection to server
+    2 July
+        -planning on pm2 for process managment and pivoting to droplets instead of linode
+        -starting work today
 
  TODO:
-    - Dockerize server
-    - Run a Kubernetes swarm
+    - Dockerize server (future plan)
+    - Run a Kubernetes swarm (future plan)
+    - Pm2 integration
     - Try caching where ever possible (
         For now:
             1. nextNumber

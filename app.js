@@ -28,6 +28,10 @@ app.use("/user", userRouter);
 app.use("/admin", adminRouter);
 
 //Routes ----------
+//check connection
+app.get("/checkConnection", (req, res) => {
+  res.send(true);
+});
 
 // catch 404 and forward to error handler
 app.get("*", function (req, res) {
