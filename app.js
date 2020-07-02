@@ -8,6 +8,7 @@ var http = require("http");
 var cors = require("cors");
 const parseArgs = require("minimist");
 const args = parseArgs(process.argv.slice(2));
+var redis_sock = require("socket.io-redis");
 
 const { name = "default", port = "3000" } = args;
 
@@ -21,6 +22,7 @@ app.use(cors());
 
 var server = http.createServer(app);
 var io = socketio(server);
+io.adapter(redis_sock({ host: "localhost", port: 6379 }));
 
 app.use(logger("dev"));
 app.use(express.json());
