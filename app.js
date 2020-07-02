@@ -6,8 +6,9 @@ const Redis = require("ioredis");
 const redis = new Redis();
 var http = require("http");
 var cors = require("cors");
-
+const parseArgs = require("minimist");
 const args = parseArgs(process.argv.slice(2));
+
 const { name = "default", port = "3000" } = args;
 
 var gameRouter = require("./routes/gameRouter");
