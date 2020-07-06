@@ -156,6 +156,9 @@ const getSessions = async (req, res) => {
       deets: item.deets,
       active: item.active,
       type: item.type,
+      gameOver: item.gameOver,
+      pause: item.pause,
+      ownedBy: item.ownedBy,
     };
   });
   res.send(fall);

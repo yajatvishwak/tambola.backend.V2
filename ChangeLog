@@ -14,6 +14,8 @@ Started log: 21 June
     2 July
         -planning on pm2 for process managment and pivoting to droplets instead of linode
         -starting work today
+    6 July
+        -changed user/getSession route
 
  TODO:
     - Dockerize server (future plan)
