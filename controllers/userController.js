@@ -67,11 +67,13 @@ const signUpRoom = async (req, res) => {
       res.send(false);
     } else {
       console.log(session.type);
-
       if (session.ownedBy === user) {
         res.send("AC"); //Admin call
       } else {
-        if (session.active === false) {
+        if (
+          session.active === false ||
+          session.signedUpUsers.indexOf(user) > -1
+        ) {
           switch (session.type) {
             case "Open":
               var allsignedupusers = session.signedUpUsers;

@@ -17,6 +17,14 @@ Started log: 21 June
     6 July
         -changed user/getSession route
 
+    4 July 
+        - app server set - using pm2 and nginx
+        - ssl certificate added
+
+    13 July
+        - first test on released app with Nalin yielded a few errors on frontend and backend
+        - change Claim ui
+
  TODO:
     - Dockerize server (future plan)
     - Run a Kubernetes swarm (future plan)

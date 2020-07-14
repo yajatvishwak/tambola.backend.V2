@@ -4,6 +4,7 @@ const table = {
   SR: "Second Row",
   TR: "Third Row",
 };
+
 const typeGen = (type) => {
   var name = table[type] || "Mystery Category";
   return name;

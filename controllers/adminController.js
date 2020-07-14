@@ -3,6 +3,7 @@ const User = require("../models/User");
 var shuffle = require("lodash.shuffle");
 var Broadcast = require("../app");
 const Redis = require("ioredis");
+
 const redis = new Redis();
 var createSession = async (req, res) => {
   var calling = [];
@@ -120,7 +121,29 @@ var getParticipantsInRoom = (req, res) => {
   }
 };
 
+var deleteSession = (req, res) => {
+  var roomID = req.body.roomID;
+  var user = req.body.username;
+  try {
+    Session.remove({ roomID: roomID }).then(async () => {
+      console.log("Removed Session");
+      const users = await User.findOneAndUpdate(
+        { username: user },
+        { admin: "disabled" },
+        (err) => {
+          if (err) res.send(false);
+          else res.send(true);
+        }
+      );
+    });
+  } catch (err) {
+    console.log(err);
+    res.send(false);
+  }
+};
+
 exports.createSession = createSession;
 exports.disconnectUser = disconnectUser;
 exports.resetGame = resetGame;
 exports.getParticipantsInRoom = getParticipantsInRoom;
+exports.deleteSession = deleteSession;

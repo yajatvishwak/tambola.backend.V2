@@ -22,5 +22,6 @@ router.post("/createSession", adminController.createSession);
 router.post("/disconnectUser", adminController.disconnectUser);
 router.post("/resetGame", adminController.resetGame);
 router.post("/getParticipants", adminController.getParticipantsInRoom);
+router.post("/deleteSession", adminController.deleteSession);
 
 module.exports = router;

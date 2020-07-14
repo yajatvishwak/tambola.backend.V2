@@ -54,14 +54,14 @@ var startGame = (req, res) => {
   var interval = req.body.interval || 10;
   try {
     if (roomID) {
-      Broacast.broadcast(roomID, "broadcast", {
-        ready: true,
-      });
       Session.update(
         { roomID: roomID.trim() },
-        { $set: { pause: false, active: true } }, //active: true
+        { $set: { pause: false, active: true } },
         function (err, affected) {
           console.log("affected: ", affected);
+          Broacast.broadcast(roomID, "broadcast", {
+            ready: true,
+          });
         }
       );
 
