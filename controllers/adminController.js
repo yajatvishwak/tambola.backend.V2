@@ -136,6 +136,8 @@ var deleteSession = (req, res) => {
         }
       );
     });
+
+    Broadcast.broadcast(roomID, "deleteRoom", { deleted: true });
   } catch (err) {
     console.log(err);
     res.send(false);

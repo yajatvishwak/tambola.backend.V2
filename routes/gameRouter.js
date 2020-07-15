@@ -21,4 +21,5 @@ router.post("/getCategory", gameController.getCategory);
 router.post("/pauseGame", gameController.pauseGame);
 router.post("/getCategoryandTicket", gameController.getCategoryandTicket);
 router.post("/getWinners", gameController.getWinners);
+
 module.exports = router;

@@ -68,15 +68,19 @@ var startGame = (req, res) => {
       try {
         var loop = setInterval(() => {
           Session.findOne({ roomID: roomID.trim() }, (err, session) => {
-            console.log(session.pause);
-            if (
-              session.pause ||
-              session.gameOver === true ||
-              session.calling.length === 0
-            ) {
-              clearInterval(loop);
+            //console.log(session.pause);
+            if (err || session === null) {
+              clearInterval();
             } else {
-              nextNumber(roomID);
+              if (
+                session.pause ||
+                session.gameOver === true ||
+                session.calling.length === 0
+              ) {
+                clearInterval(loop);
+              } else {
+                nextNumber(roomID);
+              }
             }
           });
         }, interval * 1000);
@@ -178,15 +182,19 @@ var getCategoryandTicket = (req, res) => {
             console.log(isPresent);
 
             if (isPresent === false || tickets.length == 0) {
-              console.log("in if");
+              //console.log("in if");
               var ticket = ticketGenerator.getTickets(1);
               tickets.push({ ticket: ticket[0], roomID: roomID });
-              console.log(tickets);
+              //console.log(tickets);
               await user.updateOne({ $set: { tickets: tickets } });
-              console.log(ticket);
+              //console.log(ticket);
+              const ff = category.map((item) => {
+                return typeGen.typeGen(item);
+              });
               res.send({
                 category: category,
                 ticket: ticket[0],
+                ff: ff,
               });
             } else {
               var tickets = user.tickets;
@@ -196,9 +204,13 @@ var getCategoryandTicket = (req, res) => {
               });
               ticket = obj[0].ticket;
               console.log(ticket);
+              const ff = category.map((item) => {
+                return typeGen.typeGen(item);
+              });
               res.send({
                 category: category,
                 ticket: ticket,
+                ff: ff,
               });
             }
           }
