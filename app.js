@@ -159,7 +159,7 @@ mongoose
     useFindAndModify: false,
   })
   .then(() => {
-    server.listen(port, () => {
+    server.listen(port, "localhost", () => {
       console.log(`Gameserver- ${name} Online on port ${port}`);
     });
   })
