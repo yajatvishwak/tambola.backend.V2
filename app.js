@@ -51,7 +51,7 @@ io.on("connection", (socket) => {
 
   socket.on("room", (parameters) => {
     socket.join(parameters.room);
-    console.log(socket.id);
+    //console.log(socket.id);
     var sesh = JSON.stringify({
       username: parameters.username,
       room: parameters.room,
@@ -59,7 +59,7 @@ io.on("connection", (socket) => {
     });
     try {
       redis.rpush("UAS", sesh).then((result) => {
-        console.log("Added to redis list: " + result);
+        //console.log("Added to redis list: " + result);
       });
     } catch (error) {
       console.log(error);
@@ -159,7 +159,7 @@ mongoose
     useFindAndModify: false,
   })
   .then(() => {
-    server.listen(port, "localhost", () => {
+    server.listen(port, () => {
       console.log(`Gameserver- ${name} Online on port ${port}`);
     });
   })
