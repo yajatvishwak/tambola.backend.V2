@@ -15,11 +15,18 @@ const gameController = require("../controllers/gameController");
 //router.get("/helloworld", gameController.helloWorld);
 router.get("/generateTicket", gameController.generateTicket);
 router.post("/startGame", gameController.startGame);
+router.post("/startInstant", gameController.startInstant);
 router.post("/checkGameStatus", gameController.checkGameStatus);
 router.post("/checkWinner", gameController.checkWinner);
+router.post("/checkWinnerInstant", gameController.checkWinnerInstant);
 router.post("/getCategory", gameController.getCategory);
 router.post("/pauseGame", gameController.pauseGame);
 router.post("/getCategoryandTicket", gameController.getCategoryandTicket);
+router.post(
+  "/getCategoryandTicketInstant",
+  gameController.getCategoryandTicketInstant
+);
 router.post("/getWinners", gameController.getWinners);
+router.post("/getWinnersInstant", gameController.getWinnersInstant);
 
 module.exports = router;

@@ -58,8 +58,22 @@ io.on("connection", (socket) => {
       socket: socket.id,
     });
     try {
-      redis.rpush("UAS", sesh).then((result) => {
-        //console.log("Added to redis list: " + result);
+      redis.rpush("UAS", sesh);
+      redis.lrange("UAS", 0, -1).then((userAndSessionredis) => {
+        var userandSessions = userAndSessionredis.map((ele) => {
+          return JSON.parse(ele);
+        });
+        var userAndSession = userandSessions.filter((ele) => {
+          if (ele.room === parameters.room) return ele;
+        });
+        var justName = userAndSession.map((ele) => {
+          return ele.username;
+        });
+        justName = Object.keys(
+          justName.reduce((p, c) => ((p[c] = true), p), {})
+        );
+        //console.log(justName);
+        broadcast(parameters.room, "join", justName);
       });
     } catch (error) {
       console.log(error);
@@ -71,7 +85,7 @@ io.on("connection", (socket) => {
     //   socket: socket,
     // });
     console.log("User Joined a Room");
-    var room = io.sockets.adapter.rooms["Room1"];
+    //var room = io.sockets.adapter.rooms["Room1"];
     //console.log(room);
     // /broadcast("Room1", "winner", "winner!!!");
 

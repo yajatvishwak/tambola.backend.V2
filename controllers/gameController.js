@@ -12,6 +12,8 @@
 */
 var Session = require("../models/Session");
 var User = require("../models/User");
+const Redis = require("ioredis");
+const redis = new Redis();
 
 var Broacast = require("../app");
 var shuffle = require("lodash.shuffle");
@@ -47,6 +49,74 @@ var checkGameStatus = async (req, res) => {
   } else {
     res.send(false);
   }
+};
+
+var startInstant = (req, res) => {
+  var roomID = req.body.roomID;
+  var interval = 10;
+  try {
+    //console.log(roomID);
+    if (roomID) {
+      redis
+        .get(roomID)
+        .then((session) => {
+          session = JSON.parse(session);
+          console.log(session);
+          session.active = true;
+          Broacast.broadcast(roomID, "broadcast", { ready: true });
+
+          var loop = setInterval(() => {
+            redis
+              .get(roomID)
+              .then((session) => {
+                session = JSON.parse(session);
+                if (session.gameOver === true || session.calling.length === 0) {
+                  clearInterval(loop);
+                } else {
+                  nextNumberInstant(roomID);
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }, interval * 1000);
+          console.log("[EXP] Game started for %s Now Broadcasting...", roomID);
+
+          res.send(true);
+          redis.setex(roomID, 3600, JSON.stringify(session));
+        })
+        .catch((err) => {
+          console.log(err);
+          res.send(false);
+        });
+    }
+  } catch (err) {
+    res.send(false);
+    console.log(err);
+  }
+};
+
+var nextNumberInstant = (roomID) => {
+  redis.get(roomID).then((session) => {
+    session = JSON.parse(session);
+    var calling = session.calling;
+    var done = session.done;
+    var randomNumber = shuffle(calling)[0];
+    done.push(randomNumber);
+    Broacast.broadcast(roomID, "broadcast", {
+      number: randomNumber,
+      connected: 10,
+      done: done,
+      gameOver: false,
+    });
+    var index = calling.indexOf(randomNumber);
+    if (index > -1) {
+      calling.splice(index, 1);
+    }
+    session.calling = calling;
+    session.done = done;
+    redis.setex(roomID, 3600, JSON.stringify(session));
+  });
 };
 
 var startGame = (req, res) => {
@@ -156,6 +226,19 @@ var getCategory = (req, res) => {
   }
 };
 
+var getCategoryandTicketInstant = (req, res) => {
+  var ticket = ticketGenerator.getTickets(1);
+  var category = ["FH", "FR", "SR", "TR"];
+  var ff = category.map((item) => {
+    return typeGen.typeGen(item);
+  });
+  res.send({
+    ticket: ticket,
+    category: category,
+    ff: ff,
+  });
+};
+
 // update - 1-june-perfomance
 var getCategoryandTicket = (req, res) => {
   var roomID = req.body.roomID;
@@ -179,7 +262,7 @@ var getCategoryandTicket = (req, res) => {
                 isPresent = true;
               }
             });
-            console.log(isPresent);
+            //console.log(isPresent);
 
             if (isPresent === false || tickets.length == 0) {
               //console.log("in if");
@@ -203,7 +286,7 @@ var getCategoryandTicket = (req, res) => {
                 return item.roomID === roomID;
               });
               ticket = obj[0].ticket;
-              console.log(ticket);
+              //console.log(ticket);
               const ff = category.map((item) => {
                 return typeGen.typeGen(item);
               });
@@ -219,6 +302,66 @@ var getCategoryandTicket = (req, res) => {
     });
   } else {
     res.send(false);
+  }
+};
+
+var checkWinnerInstant = (req, res) => {
+  var ticket = req.body.ticket;
+  var type = req.body.type;
+  var user = req.body.username;
+  var roomID = req.body.roomID;
+  if (ticket && type && user && roomID) {
+    redis
+      .get(roomID)
+      .then((session) => {
+        session = JSON.parse(session);
+        console.log(session);
+        var winnerObj = session.winnerobj;
+        var claim = ticketChecker.checkClaim(ticket, type, session.done);
+        var expectedClaim = winnerObj.filter((item) => {
+          return item.type === type;
+        });
+        if (expectedClaim[0].modified === true) {
+          res.send({ code: "DWC", user: expectedClaim[0].name }); //Duplicate winner claim code
+        } else {
+          if (claim && session.gameOver === false) {
+            if (type == "FH") {
+              winnerObj = winnerObj.map((item) => {
+                if (item.modified == false) {
+                  return { type: item.type, name: user, modified: true };
+                } else {
+                  return item;
+                }
+              });
+              session.gameOver = true;
+              session.active = false;
+            } else {
+              winnerObj = winnerObj.map((item) => {
+                if (item.type == type) {
+                  return { type: type, name: user, modified: true };
+                } else {
+                  return item;
+                }
+              });
+            }
+            Broacast.broadcast(roomID, "winner", {
+              message: typeGen.typeGen(type) + " won by " + user,
+              winnerobj: winnerObj,
+              gameOver: session.gameOver,
+              type: type,
+            });
+            session.winnerobj = winnerObj;
+            redis.setex(roomID, 3600, JSON.stringify(session));
+            res.send(true);
+          } else {
+            res.send(false);
+          }
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.send(false);
+      });
   }
 };
 
@@ -242,9 +385,9 @@ var checkWinner = (req, res) => {
         var expectedClaim = winnerObj.filter((item) => {
           return item.type === type;
         });
-        console.log(expectedClaim);
+        //console.log(expectedClaim);
         if (expectedClaim[0].modified === true) {
-          res.send({ code: "DWC", user: user }); //Duplicate winner claim code
+          res.send({ code: "DWC", user: expectedClaim.name }); //Duplicate winner claim code
         } else {
           if (claim && session.gameOver === false) {
             if (type == "FH") {
@@ -266,7 +409,7 @@ var checkWinner = (req, res) => {
               );
               //Untested
               var Useradmin = await User.findOne({ username: user });
-              console.log(Useradmin);
+              //console.log(Useradmin);
               Useradmin.admin = "disabled";
               Useradmin.save();
             } else {
@@ -279,7 +422,7 @@ var checkWinner = (req, res) => {
               });
             }
             Broacast.broadcast(roomID, "winner", {
-              message: type + " won by " + user,
+              message: typeGen.typeGen(type) + " won by " + user,
               winnerobj: winnerObj,
               gameOver: tempGO, //tempGo does not work -- gameover is actually handled by the type - if  type == FH gameover is set
               type: type,
@@ -336,12 +479,48 @@ const getWinners = (req, res) => {
   }
 };
 
+const getWinnersInstant = (req, res) => {
+  var roomID = req.body.roomID;
+  console.log(roomID);
+  if (roomID) {
+    redis
+      .get(roomID)
+      .then((session) => {
+        session = JSON.parse(session);
+        var winnersobj = session.winnerobj;
+        var winners = winnersobj.map((item) => {
+          return item.name;
+        });
+
+        var typesobj = winnersobj.map((item) => {
+          return item.type;
+        });
+        var types = typesobj.map((item) => {
+          return typeGen.typeGen(item);
+        });
+        var fin = Object.assign.apply(
+          {},
+          types.map((v, i) => ({ [v]: winners[i] }))
+        );
+        res.send(fin);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.send(false);
+      });
+  }
+};
+
 exports.helloWorld = helloWorld;
 exports.generateTicket = generateTicket;
 exports.startGame = startGame;
+exports.startInstant = startInstant;
 exports.checkGameStatus = checkGameStatus;
 exports.checkWinner = checkWinner;
+exports.checkWinnerInstant = checkWinnerInstant;
 exports.getCategory = getCategory;
 exports.pauseGame = pauseGame;
 exports.getCategoryandTicket = getCategoryandTicket;
+exports.getCategoryandTicketInstant = getCategoryandTicketInstant;
 exports.getWinners = getWinners;
+exports.getWinnersInstant = getWinnersInstant;

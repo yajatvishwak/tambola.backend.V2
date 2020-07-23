@@ -22,8 +22,26 @@ Started log: 21 June
         - ssl certificate added
 
     13 July
-        - first test on released app with Nalin yielded a few errors on frontend and backend
-        - change Claim ui
+        - first test on released app with Nalin yielded a few errors on frontend 
+        - change Claim ui and mostly facial updates
+    
+    21 July
+        - App is stable and is able to handle a good amount of users
+        - One test run with Ayush and Malvika did not reveal any errors
+        - Interstial ads caused problems with, thus removed temporarily
+        - Also noticed, People are stupid. That is why thinking of adding a guest mode.
+        - Guest Mode 
+            - No signup required, directly enter code and name and start playing
+            - Probably will cause less stress on server, as data will be in memory and not stored
+            - Faster execution (maybe)
+            - set categories
+        - Instant mode work 
+            - Done with starting the game and registering the users joining 
+            - Done with generating tickets and sending category to user
+            - Done with check Winner
+    23 July
+        - Pushing first version of Instant Mode, testing required
+             
 
  TODO:
     - Dockerize server (future plan)

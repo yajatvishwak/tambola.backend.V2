@@ -112,7 +112,7 @@ var getParticipantsInRoom = (req, res) => {
         return ele.username;
       });
       justName = Object.keys(justName.reduce((p, c) => ((p[c] = true), p), {}));
-      console.log(justName);
+      //console.log(justName);
       res.send(justName);
     });
   } catch (err) {
@@ -143,8 +143,44 @@ var deleteSession = (req, res) => {
     res.send(false);
   }
 };
+var createSessionInstant = (req, res) => {
+  var roomID = req.body.roomID;
+  redis.exists(roomID).then((exists) => {
+    if (exists === 1) res.send(false);
+    else {
+      var session = {
+        roomID: roomID,
+        calling: [],
+        done: [],
+        winnerobj: [],
+        gameOver: false,
+        active: false,
+      };
+      var winner = ["FH", "FR", "SR", "TR"].map((item) => {
+        return { type: item, name: "No One", modified: false };
+      });
+      //console.log(winner);
+      var calling = [];
+      for (var i = 1; i <= 90; i++) {
+        calling.push(i);
+      }
+      calling = shuffle(calling);
+      session.calling = calling;
+      session.winnerobj = winner;
+      console.log(session);
+      redis.setex(roomID, 3600, JSON.stringify(session)).then((result) => {
+        if (result) {
+          res.send(true);
+        } else {
+          res.send(false);
+        }
+      });
+    }
+  });
+};
 
 exports.createSession = createSession;
+exports.createSessionInstant = createSessionInstant;
 exports.disconnectUser = disconnectUser;
 exports.resetGame = resetGame;
 exports.getParticipantsInRoom = getParticipantsInRoom;
