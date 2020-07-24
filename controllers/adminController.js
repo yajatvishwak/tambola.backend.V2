@@ -13,7 +13,7 @@ var createSession = async (req, res) => {
   var winner = category.map((item) => {
     return { type: item, name: "No One", modified: false };
   });
-  console.log(winner);
+  //console.log(winner);
   for (var i = 1; i <= 90; i++) {
     calling.push(i);
   }

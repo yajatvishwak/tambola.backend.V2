@@ -315,7 +315,7 @@ var checkWinnerInstant = (req, res) => {
       .get(roomID)
       .then((session) => {
         session = JSON.parse(session);
-        console.log(session);
+        //console.log(session);
         var winnerObj = session.winnerobj;
         var claim = ticketChecker.checkClaim(ticket, type, session.done);
         var expectedClaim = winnerObj.filter((item) => {
@@ -442,7 +442,7 @@ var checkWinner = (req, res) => {
 
 const getWinners = (req, res) => {
   var roomID = req.body.roomID;
-  console.log(roomID);
+  //console.log(roomID);
   if (roomID) {
     Session.findOne({ roomID }, (err, session) => {
       if (err) {

@@ -9,6 +9,7 @@ var cors = require("cors");
 const parseArgs = require("minimist");
 const args = parseArgs(process.argv.slice(2));
 var redis_sock = require("socket.io-redis");
+var cron = require("node-cron");
 
 const { name = "default", port = "3000" } = args;
 
@@ -46,9 +47,12 @@ app.get("*", function (req, res) {
 //Websockets -- need to find a better way to split this up -- Found it, its called Redis :)
 //Session Variable -- will now be stored in a redis server
 
+cron.schedule("0 0 */3 * *", () => {
+  redis.ltrim("UAS", 50, -1);
+});
+
 io.on("connection", (socket) => {
   console.log("[WS] A User Connected");
-
   socket.on("room", (parameters) => {
     socket.join(parameters.room);
     //console.log(socket.id);

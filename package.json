@@ -19,6 +19,7 @@
     "minimist": "^1.2.5",
     "mongoose": "^5.9.15",
     "morgan": "^1.9.1",
+    "node-cron": "^2.0.3",
     "redis": "^3.0.2",
     "redis-json": "^4.0.1",
     "socket.io": "^2.3.0",
